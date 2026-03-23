@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon Blog API</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-badge">✦ REST API — Node.js · Express · SQLite ✦</div>
+    <h1>Manigoldo <span>Blog</span> API</h1>
+    <p class="header-sub">Gestion complète des articles · CRUD · Recherche · Filtres</p>
+    <nav>
+      <button class="active" onclick="showSection('liste', this)">📋 Articles</button>
+      <button onclick="showSection('creer', this)">✍️ Créer</button>
+      <button onclick="showSection('chercher-id', this)">🔎 Par ID</button>
+      <button onclick="showSection('modifier', this)">✏️ Modifier</button>
+      <button onclick="showSection('supprimer', this)">🗑 Supprimer</button>
+      <button onclick="showSection('recherche', this)">🔍 Rechercher</button>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- LISTE -->
+    <section id="liste">
+      <h2>Tous les articles</h2>
+      <div class="stats-bar">
+        <div class="stat-item"><span class="stat-num" id="totalArticles">0</span><span class="stat-label">Articles</span></div>
+        <div class="stat-item"><span class="stat-num" id="totalCats">0</span><span class="stat-label">Catégories</span></div>
+        <div class="stat-item"><span class="stat-num" id="totalAuteurs">0</span><span class="stat-label">Auteurs</span></div>
+      </div>
+      <div class="filtres">
+        <input type="text" id="filtreCategorie" placeholder="Filtrer par catégorie..." style="margin:0; flex:1;">
+        <input type="text" id="filtreAuteur"    placeholder="Filtrer par auteur..."    style="margin:0; flex:1;">
+        <button class="btn btn-primary" onclick="chargerArticles()">Filtrer</button>
+        <button class="btn btn-secondary" onclick="resetFiltres()">Réinitialiser</button>
+      </div>
+      <div id="listeArticles"></div>
+    </section>
+
+    <!-- CRÉER -->
+    <section id="creer" style="display:none;">
+      <h2>Nouvel article</h2>
+      <div class="formulaire">
+        <div class="form-grid">
+          <div>
+            <label class="form-label">Titre *</label>
+            <input type="text" id="titre" placeholder="Titre de l'article">
+          </div>
+          <div>
+            <label class="form-label">Auteur *</label>
+            <input type="text" id="auteur" placeholder="Nom de l'auteur">
+          </div>
+          <div>
+            <label class="form-label">Catégorie *</label>
+            <input type="text" id="categorie" placeholder="ex: Tech, Science...">
+          </div>
+          <div>
+            <label class="form-label">Tags</label>
+            <input type="text" id="tags" placeholder="ex: nodejs, api, web">
+          </div>
+          <div class="form-full">
+            <label class="form-label">Contenu *</label>
+            <textarea id="contenu" placeholder="Rédigez votre article ici..."></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="creerArticle()">✦ Publier l'article</button>
+      </div>
+      <div id="messageCreation"></div>
+    </section>
+
+    <!-- CHERCHER PAR ID -->
+    <section id="chercher-id" style="display:none;">
+      <h2>Rechercher par ID</h2>
+      <div class="formulaire">
+        <label class="form-label">ID de l'article</label>
+        <div class="search-bar" style="margin-bottom:0;">
+          <input type="number" id="searchId" placeholder="ex: 4782" style="margin:0;">
+          <button class="btn btn-primary" onclick="chercherParId()">Rechercher</button>
+        </div>
+      </div>
+      <div id="resultatId" style="margin-top:20px;"></div>
+    </section>
+
+    <!-- MODIFIER -->
+    <section id="modifier" style="display:none;">
+      <h2>Modifier un article</h2>
+      <div class="formulaire" style="margin-bottom:20px;">
+        <label class="form-label">ID de l'article à modifier</label>
+        <div class="search-bar" style="margin-bottom:0;">
+          <input type="number" id="modifId" placeholder="Entrez l'ID de l'article" style="margin:0;">
+          <button class="btn btn-primary" onclick="chargerPourModif()">Charger</button>
+        </div>
+      </div>
+      <div id="formModif" style="display:none;">
+        <div class="formulaire">
+          <div class="form-grid">
+            <div>
+              <label class="form-label">Titre *</label>
+              <input type="text" id="modifTitre" placeholder="Titre">
+            </div>
+            <div>
+              <label class="form-label">Catégorie *</label>
+              <input type="text" id="modifCategorie" placeholder="Catégorie">
+            </div>
+            <div>
+              <label class="form-label">Tags</label>
+              <input type="text" id="modifTags" placeholder="Tags">
+            </div>
+            <div class="form-full">
+              <label class="form-label">Contenu *</label>
+              <textarea id="modifContenu" placeholder="Contenu"></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="modifierArticle()">💾 Enregistrer les modifications</button>
+        </div>
+      </div>
+      <div id="messageModif"></div>
+    </section>
+
+    <!-- SUPPRIMER -->
+    <section id="supprimer" style="display:none;">
+      <h2>Supprimer un article</h2>
+      <div class="formulaire">
+        <label class="form-label">ID de l'article à supprimer</label>
+        <div class="search-bar" style="margin-bottom:0;">
+          <input type="number" id="supprimerId" placeholder="Entrez l'ID de l'article" style="margin:0;">
+          <button class="btn btn-primary" onclick="chercherPourSupprimer()">Vérifier</button>
+        </div>
+      </div>
+      <div id="aperçuSupprimer" style="margin-top:20px;"></div>
+      <div id="messageSupprimer"></div>
+    </section>
+
+    <!-- RECHERCHE TEXTE -->
+    <section id="recherche" style="display:none;">
+      <h2>Rechercher</h2>
+      <div class="search-bar">
+        <input type="text" id="searchQuery" placeholder="Mot-clé dans le titre ou le contenu...">
+        <button class="btn btn-primary" onclick="rechercherArticles()">Rechercher</button>
+      </div>
+      <div id="resultatsRecherche"></div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
