@@ -1,61 +1,53 @@
 const db = require('../database');
 
-// Génère un ID aléatoire unique entre 1000 et 9999
-function genererID(callback) {
+function genererID() {
   const id = Math.floor(1000 + Math.random() * 9000);
-  db.get('SELECT id FROM articles WHERE id = ?', [id], (err, row) => {
-    if (row) genererID(callback); // déjà utilisé, on réessaie
-    else callback(id);
-  });
+  const existing = db.prepare('SELECT id FROM articles WHERE id = ?').get(id);
+  if (existing) return genererID();
+  return id;
 }
 
 const Article = {
 
-  getAll: (filters, callback) => {
+  getAll: (filters) => {
     let query = 'SELECT * FROM articles WHERE 1=1';
     const params = [];
     if (filters.categorie) { query += ' AND categorie = ?'; params.push(filters.categorie); }
     if (filters.auteur)    { query += ' AND auteur = ?';    params.push(filters.auteur); }
     if (filters.date)      { query += ' AND date = ?';      params.push(filters.date); }
-    db.all(query, params, callback);
+    return db.prepare(query).all(...params);
   },
 
-  getById: (id, callback) => {
-    db.get('SELECT * FROM articles WHERE id = ?', [id], callback);
+  getById: (id) => {
+    return db.prepare('SELECT * FROM articles WHERE id = ?').get(id);
   },
 
-  create: (data, callback) => {
+  create: (data) => {
     const { titre, contenu, auteur, categorie, tags } = data;
-    genererID((id) => {
-      db.run(
-        'INSERT INTO articles (id, titre, contenu, auteur, categorie, tags) VALUES (?, ?, ?, ?, ?, ?)',
-        [id, titre, contenu, auteur, categorie, tags || ''],
-        function(err) { callback(err, id); }
-      );
-    });
+    const id = genererID();
+    db.prepare(
+      'INSERT INTO articles (id, titre, contenu, auteur, categorie, tags) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(id, titre, contenu, auteur, categorie, tags || '');
+    return id;
   },
 
-  update: (id, data, callback) => {
+  update: (id, data) => {
     const { titre, contenu, categorie, tags } = data;
-    db.run(
-      'UPDATE articles SET titre=?, contenu=?, categorie=?, tags=? WHERE id=?',
-      [titre, contenu, categorie, tags, id],
-      function(err) { callback(err, this?.changes); }
-    );
+    const result = db.prepare(
+      'UPDATE articles SET titre=?, contenu=?, categorie=?, tags=? WHERE id=?'
+    ).run(titre, contenu, categorie, tags, id);
+    return result.changes;
   },
 
-  delete: (id, callback) => {
-    db.run('DELETE FROM articles WHERE id = ?', [id],
-      function(err) { callback(err, this?.changes); }
-    );
+  delete: (id) => {
+    const result = db.prepare('DELETE FROM articles WHERE id = ?').run(id);
+    return result.changes;
   },
 
-  search: (query, callback) => {
-    db.all(
-      'SELECT * FROM articles WHERE titre LIKE ? OR contenu LIKE ?',
-      [`%${query}%`, `%${query}%`],
-      callback
-    );
+  search: (query) => {
+    return db.prepare(
+      'SELECT * FROM articles WHERE titre LIKE ? OR contenu LIKE ?'
+    ).all(`%${query}%`, `%${query}%`);
   }
 };
 

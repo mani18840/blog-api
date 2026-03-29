@@ -1,11 +1,11 @@
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 
-const db = new sqlite3.Database('./blog.db', (err) => {
+const db = new Database('./blog.db', (err) => {
   if (err) console.error('Erreur connexion DB:', err.message);
   else console.log('Connecté à SQLite');
 });
 
-db.run(`
+db.exec(`
   CREATE TABLE IF NOT EXISTS articles (
     id        INTEGER PRIMARY KEY,
     titre     TEXT NOT NULL,
@@ -17,4 +17,5 @@ db.run(`
   )
 `);
 
+console.log('Connecté à SQLite');
 module.exports = db;
