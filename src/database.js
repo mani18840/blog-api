@@ -1,9 +1,6 @@
 const Database = require('better-sqlite3');
 
-const db = new Database('./blog.db', (err) => {
-  if (err) console.error('Erreur connexion DB:', err.message);
-  else console.log('Connecté à SQLite');
-});
+const db = new Database('./blog.db');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS articles (
